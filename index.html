@@ -621,7 +621,10 @@
             var dist = Math.abs(baitPos - fishPos);
             var isCatching = dist < 15; // 15% tolerance
 
+            // When bait is overlapping the fish, damp the bait velocity so it "sticks"
+            // and moves slower; otherwise acceleration effect remains higher.
             if (isCatching) {
+                baitVelocity *= 0.937; // slight reduction when stuck to fish (near-normal)
                 progress += config.progressWin;
                 $("#bait").css("background-color", "#84e362"); // Green tint
             } else {
