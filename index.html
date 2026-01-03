@@ -244,19 +244,27 @@
 
         .cast-progress-bar {
             position: absolute;
-            top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
-            width: 0%;
-            height: 8px;
-            background: linear-gradient(90deg, #ffd700 0%, #ff6b6b 100%);
-            border: 2px solid #fff;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+            transform: translateX(-50%);
+            bottom: 220px; /* sits above the cat */
+            width: 180px; /* small bar */
+            height: 12px;
+            background: linear-gradient(90deg, #3cb043 0%, #7be58a 100%);
+            border: 2px solid rgba(0,0,0,0.6);
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6), inset 0 -4px 10px rgba(255,255,255,0.06);
             opacity: 0;
             pointer-events: none;
             z-index: 60;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.12s ease, width 0.02s linear;
+            overflow: hidden;
+        }
+
+        .cast-progress-bar .cast-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #a2ff8a 0%, #56d36d 100%);
+            transition: width 0.02s linear;
         }
 
         .cast-progress-bar.active {
@@ -370,7 +378,7 @@
             <div class="notification-exclamation" id="exclamation">!</div>
         </div>
         
-        <div class="cast-progress-bar" id="castProgressBar"></div>
+        <div class="cast-progress-bar" id="castProgressBar"><div class="cast-fill"></div></div>
         
         <div class="controls">
             <div id="statusText" style="margin-top:15px; color:white; text-shadow: 2px 2px black; font-size: 14px; text-align: center;">Hold mouse to cast...</div>
@@ -408,14 +416,14 @@
     (function ($) {
         // --- CONFIGURATION ---
         const config = {
-            reelAccel: 0.05,    // Acceleration when reeling up
-            gravityAccel: 0.03, // Acceleration when falling
-            maxReelSpeed: 0.6,  // Max speed reeling up
-            maxFallSpeed: 0.6,  // Max speed falling
-            progressWin: 0.2,   // How fast bar fills
-            progressLose: 0.05, // How fast bar drains
-            fishSpeed: 0.3,     // Base fish speed multiplier
-            fishChangeRate: 50  // How erratic the fish is
+            reelAccel: 0.03,    // Acceleration when reeling up
+            gravityAccel: 0.04, // Acceleration when falling
+            maxReelSpeed: 0.5,  // Max speed reeling up
+            maxFallSpeed: 0.5,  // Max speed falling
+            progressWin: 0.13,   // How fast bar fills
+            progressLose: 0.08, // How fast bar drains
+            fishSpeed: 0.7,     // Base fish speed multiplier
+            fishChangeRate: 67  // How erratic the fish is
         };
 
         // --- STATE VARIABLES ---
@@ -425,7 +433,7 @@
         var isCasting = false;
         var castHoldTime = 0;
         var castHoldInterval = null;
-        const CAST_HOLD_DURATION = 800; // 0.8 seconds in milliseconds
+        const CAST_HOLD_DURATION = 500; // 0.5 seconds in milliseconds
         
         // Physics variables (using 0-100 scale for %)
         var baitPos = 85; 
@@ -461,7 +469,7 @@
                     castHoldInterval = setInterval(function() {
                         castHoldTime += 20;
                         var progress = (castHoldTime / CAST_HOLD_DURATION) * 100;
-                        $("#castProgressBar").css("width", progress + "%");
+                        $("#castProgressBar .cast-fill").css("width", progress + "%");
                         
                         if(castHoldTime >= CAST_HOLD_DURATION) {
                             clearInterval(castHoldInterval);
@@ -481,7 +489,8 @@
                     clearInterval(castHoldInterval);
                     isCasting = false;
                     castHoldTime = 0;
-                    $("#castProgressBar").removeClass("active").css("width", "0%");
+                    $("#castProgressBar").removeClass("active");
+                    $("#castProgressBar .cast-fill").css("width", "0%");
                 }
                 
                 if(isReelingPhase) {
@@ -501,7 +510,8 @@
         function startCast() {
             isCasting = false;
             clearInterval(castHoldInterval);
-            $("#castProgressBar").removeClass("active").css("width", "0%");
+            $("#castProgressBar").removeClass("active");
+            $("#castProgressBar .cast-fill").css("width", "0%");
             
             if(isGameActive) return;
             isGameActive = true;
@@ -674,7 +684,8 @@
             
             $("#minigameLayer").fadeOut();
             $("#exclamation").hide();
-            $("#castProgressBar").removeClass("active").css("width", "0%");
+            $("#castProgressBar").removeClass("active");
+            $("#castProgressBar .cast-fill").css("width", "0%");
             
             $("#statusText").text(msg || "Hold mouse to cast...");
         }
