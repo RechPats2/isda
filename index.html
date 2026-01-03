@@ -180,6 +180,23 @@
             transition: transform 0.3s ease;
         }
 
+        .cat-avatar img {
+            display: none;
+            width: 260px;
+            height: auto;
+            margin: 0 auto;
+            transform-origin: 50% 90%;
+        }
+
+        /* explicit show class to control which image is visible */
+        .cat-avatar img.show { display: block; }
+        .cat-avatar img.img-casting.show { animation: catSwing 0.6s ease-in-out infinite alternate; }
+
+        @keyframes catSwing {
+            0% { transform: translateY(0) rotate(-8deg); }
+            100% { transform: translateY(-6px) rotate(8deg); }
+        }
+
         .cat-avatar.casting {
             animation: castingPose 0.6s ease-out forwards;
         }
@@ -348,7 +365,8 @@
 
     <div class="game-scene" id="gameScene">
         <div class="cat-avatar">
-            <i class="fas fa-cat"></i>
+            <img class="img-relaxed show" src="pics/pixellab-make-a-pixelated-cat-holding-a-1767450834558.png" alt="Cat Relaxed">
+            <img class="img-casting" src="pics/Gemini_Generated_Image_dkq0iddkq0iddkq0 (1).png" alt="Cat Casting">
             <div class="notification-exclamation" id="exclamation">!</div>
         </div>
         
@@ -407,7 +425,7 @@
         var isCasting = false;
         var castHoldTime = 0;
         var castHoldInterval = null;
-        const CAST_HOLD_DURATION = 2000; // 2 seconds in milliseconds
+        const CAST_HOLD_DURATION = 800; // 0.8 seconds in milliseconds
         
         // Physics variables (using 0-100 scale for %)
         var baitPos = 85; 
@@ -490,6 +508,9 @@
             
             // Trigger casting animation on cat
             $(".cat-avatar").removeClass("fishing").addClass("casting");
+            // swap images: hide relaxed, show casting
+            $(".cat-avatar .img-relaxed").removeClass("show");
+            $(".cat-avatar .img-casting").addClass("show");
             
             $("#statusText").text("Fishing line cast... waiting for a bite.");
             
@@ -530,6 +551,9 @@
             
             // Trigger fishing animation on cat
             $(".cat-avatar").removeClass("casting").addClass("fishing");
+            // when the user clicks to start the minigame, switch back to relaxed image
+            $(".cat-avatar .img-casting").removeClass("show");
+            $(".cat-avatar .img-relaxed").addClass("show");
             
             $("#exclamation").hide();
             $("#minigameLayer").fadeIn(); 
@@ -626,12 +650,20 @@
 
         function resetGame(msg) {
             cancelAnimationFrame(gameLoopReq);
+            
+            // Clear casting state
+            isCasting = false;
+            clearInterval(castHoldInterval);
+            
             isGameActive = false;
             isReelingPhase = false;
             isMouseHeld = false;
             
             // Reset cat animation
             $(".cat-avatar").removeClass("casting fishing");
+            // ensure relaxed image is shown
+            $(".cat-avatar .img-casting").removeClass("show");
+            $(".cat-avatar .img-relaxed").addClass("show");
             
             // Reset Visuals
             $(".fishing .sea .fish").hide();
@@ -642,9 +674,9 @@
             
             $("#minigameLayer").fadeOut();
             $("#exclamation").hide();
+            $("#castProgressBar").removeClass("active").css("width", "0%");
             
-            $("#castBtn").prop("disabled", false).text("Cast Line");
-            $("#statusText").text(msg || "");
+            $("#statusText").text(msg || "Hold mouse to cast...");
         }
 
     })(jQuery);
