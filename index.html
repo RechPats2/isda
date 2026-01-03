@@ -13,23 +13,148 @@
 
         body {
             height: 100vh;
-            background: #2F1B14; 
+            background: #1a1a1a; 
             margin: 0;
             overflow: hidden;
             font-family: 'Press Start 2P', cursive;
             user-select: none;
         }
 
+        /* --- MAIN MENU SCREEN --- */
+        .menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            z-index: 1000;
+        }
+
+        .menu-stall {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+            background: linear-gradient(180deg, #8b4513 0%, #654321 100%);
+            border: 8px solid #3d2817;
+            border-radius: 10px;
+            padding: 60px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .menu-stall::before {
+            content: "";
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120%;
+            height: 50px;
+            background: repeating-linear-gradient(
+                90deg,
+                #e63946 0px,
+                #e63946 60px,
+                #f1faee 60px,
+                #f1faee 120px
+            );
+            border: 3px solid #c1121f;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.5);
+        }
+
+        .menu-stall::after {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150%;
+            height: 30px;
+            background: repeating-linear-gradient(
+                90deg,
+                #e63946 0px,
+                #e63946 60px,
+                #f1faee 60px,
+                #f1faee 120px
+            );
+            border: 2px solid #c1121f;
+            border-top: none;
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 5% 100%);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .menu-title {
+            font-size: 48px;
+            color: #ffd700;
+            text-shadow: 3px 3px #000, 6px 6px #c1121f;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 2px;
+        }
+
+        .menu-subtitle {
+            font-size: 16px;
+            color: #f1faee;
+            text-shadow: 2px 2px #000;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 1px;
+        }
+
+        .menu-button {
+            pointer-events: all;
+            background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
+            border: 4px solid #f1faee;
+            color: #f1faee;
+            padding: 20px 50px;
+            font-family: inherit;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #8b0000, 0 12px 20px rgba(0, 0, 0, 0.5);
+            transition: all 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .menu-button:hover {
+            background: linear-gradient(135deg, #ff4757 0%, #d63447 100%);
+            box-shadow: 0 10px 0 #8b0000, 0 14px 25px rgba(0, 0, 0, 0.6);
+        }
+
+        .menu-button:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #8b0000, 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .menu-button:disabled {
+            background: #666;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
         /* --- THE MAIN VISUAL SCENE --- */
         .game-scene {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            display: flex;
+            display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             pointer-events: none;
             z-index: 1;
+            background: #2F1B14;
+        }
+
+        .game-scene.active {
+            display: flex;
         }
 
         .background-image-placeholder {
@@ -43,11 +168,35 @@
         }
 
         .cat-avatar {
-            font-size: 100px;
+            font-size: 120px;
             color: #fff;
             text-shadow: 4px 4px #000;
-            margin-bottom: 20px;
-            position: relative;
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            pointer-events: none;
+            transition: transform 0.3s ease;
+        }
+
+        .cat-avatar.casting {
+            animation: castingPose 0.6s ease-out forwards;
+        }
+
+        .cat-avatar.fishing {
+            animation: fishingPose 0.6s ease-out forwards;
+        }
+
+        @keyframes castingPose {
+            0% { transform: translateX(-50%) rotate(0deg); }
+            50% { transform: translateX(-50%) rotate(-25deg) translateY(-15px); }
+            100% { transform: translateX(-50%) rotate(-20deg) translateY(-10px); }
+        }
+
+        @keyframes fishingPose {
+            0% { transform: translateX(-50%) rotate(-20deg) translateY(-10px); }
+            100% { transform: translateX(-50%) rotate(-15deg) translateY(-5px); }
         }
 
         /* --- UI ELEMENTS --- */
@@ -74,6 +223,27 @@
             background: #666;
             box-shadow: none;
             cursor: not-allowed;
+        }
+
+        .cast-progress-bar {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0%;
+            height: 8px;
+            background: linear-gradient(90deg, #ffd700 0%, #ff6b6b 100%);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 60;
+            transition: opacity 0.2s ease;
+        }
+
+        .cast-progress-bar.active {
+            opacity: 1;
         }
 
         .notification-exclamation {
@@ -103,7 +273,34 @@
             top: 50%;
             transform: translateY(-50%);
             z-index: 10;
-            display: none; 
+            display: none;
+            background: linear-gradient(180deg, #8b4513 0%, #654321 100%);
+            border: 6px solid #3d2817;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .fishing-container-wrapper::before {
+            content: "";
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140%;
+            height: 40px;
+            background: repeating-linear-gradient(
+                90deg,
+                #e63946 0px,
+                #e63946 40px,
+                #f1faee 40px,
+                #f1faee 80px
+            );
+            border: 2px solid #c1121f;
+            border-radius: 8px 8px 0 0;
+            z-index: -1;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
         }
 
         .fishing {
@@ -124,7 +321,12 @@
         .fishing .rod .reel .handle.reelout { animation-duration: 0.5s; animation-direction: reverse; animation-play-state: running; }
         .fishing .sea { position: absolute; width: 60px; height: 100%; background: repeating-linear-gradient(0deg, rgba(247, 127, 0, 1) 0px, rgba(247, 127, 0, 1) 50px, rgba(255, 166, 73, 1) 52px, rgba(119, 73, 54, 1) 56px, rgba(119, 73, 54, 1) 57px, rgba(247, 127, 0, 1) 61px, rgba(247, 127, 0, 1) 100px); left: 30px; border-radius: 10px; border: 2px solid #774936; box-shadow: inset -2px -2px rgba(0, 0, 0, 0.3); padding: 10px; box-sizing: border-box; }
         .fishing .sea:before { content: ""; position: absolute; width: 15px; height: 100%; background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0) 0px, rgba(255, 255, 255, 0) 5px, rgba(86, 85, 84, 1) 6px, rgba(19, 21, 21, 1) 9px, rgba(86, 85, 84, 1) 9px, rgba(255, 255, 255, 0) 11px, rgba(255, 255, 255, 0) 34px); top: 0; left: -12px; z-index: -1; }
-        .fishing .sea .area { position: relative; width: 100%; height: 100%; border-radius: 10px; background: linear-gradient(180deg, rgba(142, 202, 230, 1) 0%, rgba(33, 158, 188, 1) 100%); box-shadow: inset -3px 3px rgba(0, 0, 0, 0.3); border: 2px solid #774936; box-sizing: border-box; overflow: hidden;}
+        .fishing .sea .area { position: relative; width: 100%; height: 100%; border-radius: 10px; background: linear-gradient(180deg, rgba(100, 200, 240, 1) 0%, rgba(50, 150, 200, 1) 50%, rgba(30, 120, 180, 1) 100%); box-shadow: inset -3px 3px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.2); border: 2px solid #774936; box-sizing: border-box; overflow: hidden; animation: waterWave 3s ease-in-out infinite; }
+
+        @keyframes waterWave {
+            0%, 100% { background: linear-gradient(180deg, rgba(100, 200, 240, 1) 0%, rgba(50, 150, 200, 1) 50%, rgba(30, 120, 180, 1) 100%); }
+            50% { background: linear-gradient(180deg, rgba(110, 210, 250, 1) 0%, rgba(60, 160, 210, 1) 50%, rgba(40, 130, 190, 1) 100%); }
+        }
         .fishing .sea .fish { width: 100%; height: 50px; position: absolute; top: 0; right: 0; z-index: 4; font-size: 25px; line-height: 50px; text-align: center; color: #264653; text-shadow: 1px 1px #2a9d8f; }
         .fishing .sea .bait { position: absolute; width: 100%; height: 100px; top: 0%; left: 0; background: #beee62; border-radius: 10px; box-shadow: inset 0 0 1px 3px #70ae6e; }
         .fishing .progress { position: absolute; width: 30px; height: 100%; border: 2px solid #9e5c42; background: #e36414; right: 0; top: 0; border-radius: 10px; padding: 3px; box-sizing: border-box; }
@@ -134,17 +336,26 @@
 </head>
 <body>
 
+    <div class="menu-screen" id="menuScreen">
+        <div class="menu-stall">
+            <h1 class="menu-title">🎣 FISHING</h1>
+            <p class="menu-subtitle">~ Night Market Stall ~</p>
+            <button id="startBtn" class="menu-button">Start Game</button>
+        </div>
+    </div>
+
     <div class="background-image-placeholder"></div>
 
-    <div class="game-scene">
+    <div class="game-scene" id="gameScene">
         <div class="cat-avatar">
             <i class="fas fa-cat"></i>
             <div class="notification-exclamation" id="exclamation">!</div>
         </div>
         
+        <div class="cast-progress-bar" id="castProgressBar"></div>
+        
         <div class="controls">
-            <button id="castBtn" class="action-btn">Cast Line</button>
-            <div id="statusText" style="margin-top:15px; color:white; text-shadow: 2px 2px black; font-size: 14px;"></div>
+            <div id="statusText" style="margin-top:15px; color:white; text-shadow: 2px 2px black; font-size: 14px; text-align: center;">Hold mouse to cast...</div>
         </div>
     </div>
 
@@ -193,6 +404,10 @@
         var isGameActive = false;
         var isReelingPhase = false;
         var isMouseHeld = false;
+        var isCasting = false;
+        var castHoldTime = 0;
+        var castHoldInterval = null;
+        const CAST_HOLD_DURATION = 2000; // 2 seconds in milliseconds
         
         // Physics variables (using 0-100 scale for %)
         var baitPos = 85; 
@@ -202,21 +417,55 @@
         var progress = 0;
         var gameLoopReq; // Request Animation Frame ID
 
+        // --- PHASE 0: MENU ---
+        function startGame() {
+            $("#menuScreen").fadeOut(500, function() {
+                $("#gameScene").addClass("active");
+            });
+        }
+
         // --- PHASE 1: INITIALIZATION ---
         $(document).ready(function() {
+            // Menu Button
+            $("#startBtn").click(startGame);
+            
             // Setup Listeners
-            $("#castBtn").click(startCast);
             $("#exclamation").click(startMinigame);
             
-            // Mouse/Touch controls for the minigame
+            // Hold-to-cast mechanics (when not in minigame)
             $(document).on('mousedown touchstart', function(e) {
-                if(isReelingPhase) {
+                if(!isReelingPhase && !isGameActive && !isCasting) {
+                    // Start casting hold
+                    isCasting = true;
+                    castHoldTime = 0;
+                    $("#castProgressBar").addClass("active");
+                    
+                    castHoldInterval = setInterval(function() {
+                        castHoldTime += 20;
+                        var progress = (castHoldTime / CAST_HOLD_DURATION) * 100;
+                        $("#castProgressBar").css("width", progress + "%");
+                        
+                        if(castHoldTime >= CAST_HOLD_DURATION) {
+                            clearInterval(castHoldInterval);
+                            startCast();
+                        }
+                    }, 20);
+                } else if(isReelingPhase) {
+                    // Normal minigame click
                     isMouseHeld = true;
                     $(".fishing .rod .reel .handle").addClass("reelin").removeClass("reelout");
                 }
             });
 
             $(document).on('mouseup touchend', function(e) {
+                if(isCasting && castHoldTime < CAST_HOLD_DURATION) {
+                    // Released too early - cancel cast
+                    clearInterval(castHoldInterval);
+                    isCasting = false;
+                    castHoldTime = 0;
+                    $("#castProgressBar").removeClass("active").css("width", "0%");
+                }
+                
                 if(isReelingPhase) {
                     isMouseHeld = false;
                     $(".fishing .rod .reel .handle").removeClass("reelin").addClass("reelout");
@@ -232,10 +481,16 @@
 
         // --- PHASE 2: CASTING & WAITING ---
         function startCast() {
+            isCasting = false;
+            clearInterval(castHoldInterval);
+            $("#castProgressBar").removeClass("active").css("width", "0%");
+            
             if(isGameActive) return;
             isGameActive = true;
             
-            $("#castBtn").prop("disabled", true).text("Waiting...");
+            // Trigger casting animation on cat
+            $(".cat-avatar").removeClass("fishing").addClass("casting");
+            
             $("#statusText").text("Fishing line cast... waiting for a bite.");
             
             // Random time between 2 and 5 seconds
@@ -272,6 +527,10 @@
             if(!isGameActive || isReelingPhase) return;
             
             isReelingPhase = true;
+            
+            // Trigger fishing animation on cat
+            $(".cat-avatar").removeClass("casting").addClass("fishing");
+            
             $("#exclamation").hide();
             $("#minigameLayer").fadeIn(); 
             $(".fishing .sea .fish").show();
@@ -370,6 +629,9 @@
             isGameActive = false;
             isReelingPhase = false;
             isMouseHeld = false;
+            
+            // Reset cat animation
+            $(".cat-avatar").removeClass("casting fishing");
             
             // Reset Visuals
             $(".fishing .sea .fish").hide();
