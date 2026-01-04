@@ -150,7 +150,9 @@
             justify-content: center;
             pointer-events: none;
             z-index: 1;
-            background: #2F1B14;
+            background-image: url('backroundpic.png');
+            background-size: cover;
+            background-position: center;
         }
 
         .game-scene.active {
@@ -160,16 +162,8 @@
         .background-image-placeholder {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('https://i.pinimg.com/originals/26/22/0c/26220c15623091df8542031a0e1b203a.gif');
-            background-size: cover;
-            background-position: center;
-            opacity: 0;
+            display: none;
             z-index: -2;
-            transition: opacity 0.5s ease;
-        }
-
-        .background-image-placeholder.active {
-            opacity: 0.8;
         }
 
         .cat-avatar {
@@ -313,9 +307,7 @@
             transform: translateY(-50%);
             z-index: 10;
             display: none;
-            background-image: url('https://i.pinimg.com/originals/26/22/0c/26220c15623091df8542031a0e1b203a.gif');
-            background-size: cover;
-            background-position: center;
+            background: transparent;
             width: 300px;
             height: 500px;
             border: none;
@@ -554,9 +546,6 @@
             currentFish = fishTypes[Math.floor(Math.random() * fishTypes.length)];
             applyFishDifficulty(currentFish.difficulty);
             
-            // Show background
-            $(".background-image-placeholder").addClass("active");
-            
             // Trigger casting animation on cat
             $(".cat-avatar").removeClass("fishing").addClass("casting");
             // swap images: hide relaxed, show casting
@@ -731,9 +720,6 @@
             // ensure relaxed image is shown
             $(".cat-avatar .img-casting").removeClass("show");
             $(".cat-avatar .img-relaxed").addClass("show");
-            
-            // Hide background
-            $(".background-image-placeholder").removeClass("active");
             
             // Reset Visuals
             $(".fishing .sea .fish").hide();
