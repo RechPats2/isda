@@ -163,8 +163,13 @@
             background-image: url('https://i.pinimg.com/originals/26/22/0c/26220c15623091df8542031a0e1b203a.gif');
             background-size: cover;
             background-position: center;
-            opacity: 0.8;
+            opacity: 0;
             z-index: -2;
+            transition: opacity 0.5s ease;
+        }
+
+        .background-image-placeholder.active {
+            opacity: 0.8;
         }
 
         .cat-avatar {
@@ -177,7 +182,6 @@
             transform: translateX(-50%);
             z-index: 50;
             pointer-events: none;
-            transition: transform 0.3s ease;
         }
 
         .cat-avatar img {
@@ -203,6 +207,16 @@
 
         .cat-avatar.fishing {
             animation: fishingPose 0.6s ease-out forwards;
+        }
+
+        .cat-avatar.shaking img.show {
+            animation: shake 0.15s ease-in-out infinite !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0px); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
         }
 
         @keyframes castingPose {
@@ -242,32 +256,32 @@
             cursor: not-allowed;
         }
 
-        .cast-progress-bar {
+        .progress-container {
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            bottom: 220px; /* sits above the cat */
-            width: 180px; /* small bar */
-            height: 12px;
-            background: linear-gradient(90deg, #3cb043 0%, #7be58a 100%);
-            border: 2px solid rgba(0,0,0,0.6);
-            border-radius: 8px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.6), inset 0 -4px 10px rgba(255,255,255,0.06);
+            top: 50%;
+            margin-top: -25px;
+            width: 500px;
+            background-color: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
             opacity: 0;
             pointer-events: none;
             z-index: 60;
-            transition: opacity 0.12s ease, width 0.02s linear;
-            overflow: hidden;
+            transition: opacity 0.12s ease;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+            border: 3px solid #333;
         }
 
-        .cast-progress-bar .cast-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #a2ff8a 0%, #56d36d 100%);
+        .progress-bar {
+            width: 0%; /* Updated dynamically by JavaScript */
+            height: 50px;
+            background-color: #4caf50; /* Green */
             transition: width 0.02s linear;
         }
 
-        .cast-progress-bar.active {
+        .progress-container.active {
             opacity: 1;
         }
 
@@ -294,36 +308,26 @@
         /* --- THE FISHING MINIGAME (SIDE BAR) --- */
         .fishing-container-wrapper {
             position: absolute;
-            left: 50px;
+            left: 80px;
             top: 50%;
             transform: translateY(-50%);
             z-index: 10;
             display: none;
-            background: linear-gradient(180deg, #8b4513 0%, #654321 100%);
-            border: 6px solid #3d2817;
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            background-image: url('https://i.pinimg.com/originals/26/22/0c/26220c15623091df8542031a0e1b203a.gif');
+            background-size: cover;
+            background-position: center;
+            width: 300px;
+            height: 500px;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            box-shadow: none;
             position: relative;
         }
 
         .fishing-container-wrapper::before {
             content: "";
-            position: absolute;
-            top: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 140%;
-            height: 40px;
-            background: repeating-linear-gradient(
-                90deg,
-                #e63946 0px,
-                #e63946 40px,
-                #f1faee 40px,
-                #f1faee 80px
-            );
-            border: 2px solid #c1121f;
-            border-radius: 8px 8px 0 0;
+            display: none;
             z-index: -1;
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.5);
         }
@@ -378,7 +382,9 @@
             <div class="notification-exclamation" id="exclamation">!</div>
         </div>
         
-        <div class="cast-progress-bar" id="castProgressBar"><div class="cast-fill"></div></div>
+        <div class="progress-container" id="castProgressBar">
+            <div class="progress-bar" id="castProgressBarFill"></div>
+        </div>
         
         <div class="controls">
             <div id="statusText" style="margin-top:15px; color:white; text-shadow: 2px 2px black; font-size: 14px; text-align: center;">Hold mouse to cast...</div>
@@ -426,6 +432,18 @@
             fishChangeRate: 67  // How erratic the fish is
         };
 
+        // --- FISH TYPES WITH DIFFICULTY ---
+        var fishTypes = [
+            { name: "Goldfish", difficulty: 1 },
+            { name: "Goldfish 2", difficulty: 1 },
+            { name: "Koi", difficulty: 2 },
+            { name: "Gold Koi", difficulty: 3 },
+            { name: "Bass", difficulty: 2 },
+            { name: "Tuna", difficulty: 3 }
+        ];
+
+        var currentFish = null;
+
         // --- STATE VARIABLES ---
         var isGameActive = false;
         var isReelingPhase = false;
@@ -442,6 +460,22 @@
         var fishTarget = 85;
         var progress = 0;
         var gameLoopReq; // Request Animation Frame ID
+
+        // --- DIFFICULTY SYSTEM ---
+        function applyFishDifficulty(difficulty) {
+            // Difficulty 1 (Easy): Goldfish - slower fish
+            if(difficulty === 1) {
+                config.fishSpeed = 0.4;
+            }
+            // Difficulty 2 (Medium): Koi, Bass - medium fish speed
+            else if(difficulty === 2) {
+                config.fishSpeed = 0.7;
+            }
+            // Difficulty 3 (Hard): Gold Koi, Tuna - faster fish
+            else if(difficulty === 3) {
+                config.fishSpeed = 1.0;
+            }
+        }
 
         // --- PHASE 0: MENU ---
         function startGame() {
@@ -469,7 +503,7 @@
                     castHoldInterval = setInterval(function() {
                         castHoldTime += 20;
                         var progress = (castHoldTime / CAST_HOLD_DURATION) * 100;
-                        $("#castProgressBar .cast-fill").css("width", progress + "%");
+                        $("#castProgressBarFill").css("width", progress + "%");
                         
                         if(castHoldTime >= CAST_HOLD_DURATION) {
                             clearInterval(castHoldInterval);
@@ -490,7 +524,7 @@
                     isCasting = false;
                     castHoldTime = 0;
                     $("#castProgressBar").removeClass("active");
-                    $("#castProgressBar .cast-fill").css("width", "0%");
+                    $("#castProgressBarFill").css("width", "0%");
                 }
                 
                 if(isReelingPhase) {
@@ -511,16 +545,32 @@
             isCasting = false;
             clearInterval(castHoldInterval);
             $("#castProgressBar").removeClass("active");
-            $("#castProgressBar .cast-fill").css("width", "0%");
+            $("#castProgressBarFill").css("width", "0%");
             
             if(isGameActive) return;
             isGameActive = true;
+            
+            // Select random fish and apply difficulty
+            currentFish = fishTypes[Math.floor(Math.random() * fishTypes.length)];
+            applyFishDifficulty(currentFish.difficulty);
+            
+            // Show background
+            $(".background-image-placeholder").addClass("active");
             
             // Trigger casting animation on cat
             $(".cat-avatar").removeClass("fishing").addClass("casting");
             // swap images: hide relaxed, show casting
             $(".cat-avatar .img-relaxed").removeClass("show");
             $(".cat-avatar .img-casting").addClass("show");
+            
+            // After 0.7 seconds, switch back to relaxed image (simulating line landing)
+            setTimeout(function() {
+                if(isGameActive) {
+                    $(".cat-avatar").removeClass("casting");
+                    $(".cat-avatar .img-casting").removeClass("show");
+                    $(".cat-avatar .img-relaxed").addClass("show");
+                }
+            }, 700);
             
             $("#statusText").text("Fishing line cast... waiting for a bite.");
             
@@ -559,9 +609,9 @@
             
             isReelingPhase = true;
             
-            // Trigger fishing animation on cat
-            $(".cat-avatar").removeClass("casting").addClass("fishing");
-            // when the user clicks to start the minigame, switch back to relaxed image
+            // Remove casting animation and add shake
+            $(".cat-avatar").removeClass("casting").addClass("shaking");
+            // Keep relaxed image visible
             $(".cat-avatar .img-casting").removeClass("show");
             $(".cat-avatar .img-relaxed").addClass("show");
             
@@ -575,7 +625,7 @@
             baitVelocity = 0;
             fishPos = 80;
             fishTarget = 20;
-            progress = 10; // Start with a little progress
+            progress = 25; // Start with 25% progress
             
             // Start the physics loop
             gameLoop();
@@ -624,7 +674,6 @@
             // When bait is overlapping the fish, damp the bait velocity so it "sticks"
             // and moves slower; otherwise acceleration effect remains higher.
             if (isCatching) {
-                baitVelocity *= 0.937; // slight reduction when stuck to fish (near-normal)
                 progress += config.progressWin;
                 $("#bait").css("background-color", "#84e362"); // Green tint
             } else {
@@ -642,8 +691,8 @@
 
             // Check Loss Condition
             if (progress <= 0 && isGameActive && isReelingPhase) {
-                // optional: instant fail if bar hits bottom? 
-                // For now, we just stay at 0 until they catch up or give up.
+                gameLose();
+                return; // Exit loop
             }
 
             // 4. RENDER TO DOM
@@ -661,6 +710,11 @@
             resetGame("Fish Caught! Cast again?");
         }
 
+        function gameLose() {
+            toastr.error("The fish got away!", "LOST");
+            resetGame("Fish escaped! Cast again?");
+        }
+
         function resetGame(msg) {
             cancelAnimationFrame(gameLoopReq);
             
@@ -673,10 +727,13 @@
             isMouseHeld = false;
             
             // Reset cat animation
-            $(".cat-avatar").removeClass("casting fishing");
+            $(".cat-avatar").removeClass("casting fishing shaking");
             // ensure relaxed image is shown
             $(".cat-avatar .img-casting").removeClass("show");
             $(".cat-avatar .img-relaxed").addClass("show");
+            
+            // Hide background
+            $(".background-image-placeholder").removeClass("active");
             
             // Reset Visuals
             $(".fishing .sea .fish").hide();
@@ -688,7 +745,7 @@
             $("#minigameLayer").fadeOut();
             $("#exclamation").hide();
             $("#castProgressBar").removeClass("active");
-            $("#castProgressBar .cast-fill").css("width", "0%");
+            $("#castProgressBarFill").css("width", "0%");
             
             $("#statusText").text(msg || "Hold mouse to cast...");
         }
